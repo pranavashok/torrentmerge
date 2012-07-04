@@ -10,3 +10,14 @@
 *.lai
 *.la
 *.a
+
+#gedit temporary files
+*.*~
+
+#sample torrent files
+*.torrent
+
+#eclipse files
+.cproject
+.settings/
+.project
