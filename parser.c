@@ -12,12 +12,7 @@
 #include <math.h>
 #include "parser.h"
 
-#define INTEGER 0
-#define STRING 1
-#define LIST 2
-#define DICTIONARY 3
-
-char* read_from_file(char* file) {
+unsigned char* read_from_file(char* file) {
 	char *bytes;
 	long int pos;
 	FILE *f = fopen(file, "rb");
@@ -30,14 +25,36 @@ char* read_from_file(char* file) {
 	return bytes;
 }
 
-long bencode_parse_len(char* bytes) {
+bencode_node* sha1_hash_parse(unsigned char* bytes) {
+	unsigned char **pieces;
+	long long i;
+	bencode_node* n;
+	n = (bencode_node *)malloc(sizeof(bencode_node));
+	memset(n, 0, sizeof(n));
+	n->type = HASH;
+	long long len = bencode_parse_number(bytes);
+	while(*(bytes++) != ':');
+	pieces = (unsigned char **)malloc(sizeof(unsigned char*)*len/20);
+	for(i = 0; i < len/20; i = i++) {
+		pieces[i] = (unsigned char*)malloc(20*sizeof(unsigned char));
+		bzero(pieces[i], 20);
+		memcpy(pieces[i], bytes+i*20, 20);
+	}
+	n->content.h = pieces;
+	len = sizeof(n->content.h);
+	n->len = len + 1 + (len == 0 ? 1 : (int)(log10(len)+1));
+	bytes += n->len;
+	return n;
+}
+
+long bencode_parse_len(unsigned char* bytes) {
 	long i = 0;
 	while(bytes[i] != 'e')
 		i++;
 	return i-1;
 }
 
-long bencode_parse_number(char* bytes) {
+long bencode_parse_number(unsigned char* bytes) {
 	int i = 0;
 	long n;
 	if(isdigit(bytes[i])) {
@@ -46,10 +63,9 @@ long bencode_parse_number(char* bytes) {
 	return n;
 }
 
-bencode_dict* bencode_parse_dict(char* bytes) {
+bencode_dict* bencode_parse_dict(unsigned char* bytes) {
 	int i = 0;
 	long len, keylen, dictlen = 0;
-	char* val;
 	bencode_dict *start, *it;
 
 	start = NULL;
@@ -59,9 +75,12 @@ bencode_dict* bencode_parse_dict(char* bytes) {
 		memset(it, 0, sizeof(it));
 		keylen = bencode_parse_number(bytes);
 		while(*(bytes++)!=':') len++; //Counts number of digits also
-		it->key = (char *)malloc(keylen);
+		it->key = (unsigned char *)malloc(keylen);
 		memcpy(it->key, bytes, keylen);
 		bytes+=keylen;
+		if(!strcmp(it->key, "pieces")) {
+			sha1_hash_parse(bytes);
+		}
 		it->value = (bencode_node *)bencode_parse(bytes);
 		dictlen += it->value->len + keylen + 1 + len;
 		bytes += it->value->len;
@@ -72,10 +91,9 @@ bencode_dict* bencode_parse_dict(char* bytes) {
 	return start;
 }
 
-bencode_node* bencode_parse_list(char* bytes) {
+bencode_node* bencode_parse_list(unsigned char* bytes) {
 	int i = 0;
 	long len, listlen = 0;
-	char* val;
 	bencode_node *start, *it;
 
 	start = NULL;
@@ -90,7 +108,7 @@ bencode_node* bencode_parse_list(char* bytes) {
 	return start;
 }
 
-long long bencode_parse_integer(char* bytes) {
+long long bencode_parse_integer(unsigned char* bytes) {
 	int i = 0;
 	long long n = 0;
 	if(isdigit(bytes[i])) {
@@ -99,17 +117,17 @@ long long bencode_parse_integer(char* bytes) {
 	return n;
 }
 
-char* bencode_parse_string(char* bytes) {
-	char *string;
+unsigned char* bencode_parse_string(unsigned char* bytes) {
+	unsigned char *string;
 	long long len = bencode_parse_number(bytes);
 	while(*(bytes++) != ':');
-	string = (char *)malloc(len);
+	string = (unsigned char *)malloc(len);
 	bzero(string, len+1);
 	memcpy(string, bytes, len);
 	return string;
 }
 
-struct bencode_node* bencode_parse(char* bytes) {
+struct bencode_node* bencode_parse(unsigned char* bytes) {
 	bencode_node *n;
 
 	long pos, i, j, len;
@@ -139,7 +157,6 @@ struct bencode_node* bencode_parse(char* bytes) {
 					n = (bencode_node *)malloc(sizeof(bencode_node));
 					memset(n, 0, sizeof(n));
 					n->type = INTEGER;
-					//len = bencode_parse_len(++bytes);
 					n->content.i = bencode_parse_integer(++bytes);
 					n->len = 2 + (n->content.i == 0 ? 1 : (int)(log10(n->content.i)+1));
 					bytes += n->len;
