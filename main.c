@@ -14,5 +14,6 @@ int main(int argv, char* argc[]) {
 	bencode = read_from_file(argc[1]);
 	bencode_node *n;
 	n = bencode_parse(bencode);
+	printf("\nCompleted");
 	return 0;
 }

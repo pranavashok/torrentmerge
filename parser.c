@@ -15,36 +15,14 @@
 unsigned char* read_from_file(char* file) {
 	char *bytes;
 	long int pos;
-	FILE *f = fopen(file, "rb");
+	FILE *f = fopen(file, "r");
 	fseek(f, 0, SEEK_END);
 	pos = ftell(f);
 	fseek(f, 0, SEEK_SET);
 	bytes = malloc(pos);
-	fread(bytes, pos, 1, f);
+	fread(bytes, pos*sizeof(unsigned char), sizeof(unsigned char), f);
 	fclose(f);
 	return bytes;
-}
-
-bencode_node* sha1_hash_parse(unsigned char* bytes) {
-	unsigned char **pieces;
-	long long i;
-	bencode_node* n;
-	n = (bencode_node *)malloc(sizeof(bencode_node));
-	memset(n, 0, sizeof(n));
-	n->type = HASH;
-	long long len = bencode_parse_number(bytes);
-	while(*(bytes++) != ':');
-	pieces = (unsigned char **)malloc(sizeof(unsigned char*)*len/20);
-	for(i = 0; i < len/20; i = i++) {
-		pieces[i] = (unsigned char*)malloc(20*sizeof(unsigned char));
-		bzero(pieces[i], 20);
-		memcpy(pieces[i], bytes+i*20, 20);
-	}
-	n->content.h = pieces;
-	len = sizeof(n->content.h);
-	n->len = len + 1 + (len == 0 ? 1 : (int)(log10(len)+1));
-	bytes += n->len;
-	return n;
 }
 
 long bencode_parse_len(unsigned char* bytes) {
@@ -78,9 +56,6 @@ bencode_dict* bencode_parse_dict(unsigned char* bytes) {
 		it->key = (unsigned char *)malloc(keylen);
 		memcpy(it->key, bytes, keylen);
 		bytes+=keylen;
-		if(!strcmp(it->key, "pieces")) {
-			sha1_hash_parse(bytes);
-		}
 		it->value = (bencode_node *)bencode_parse(bytes);
 		dictlen += it->value->len + keylen + 1 + len;
 		bytes += it->value->len;
@@ -90,7 +65,6 @@ bencode_dict* bencode_parse_dict(unsigned char* bytes) {
 	start->len = dictlen;
 	return start;
 }
-
 bencode_node* bencode_parse_list(unsigned char* bytes) {
 	int i = 0;
 	long len, listlen = 0;
@@ -117,14 +91,17 @@ long long bencode_parse_integer(unsigned char* bytes) {
 	return n;
 }
 
-unsigned char* bencode_parse_string(unsigned char* bytes) {
+bencode_string* bencode_parse_string(unsigned char* bytes) {
 	unsigned char *string;
+	bencode_string *tmp = malloc(sizeof(bencode_string));
 	long long len = bencode_parse_number(bytes);
 	while(*(bytes++) != ':');
 	string = (unsigned char *)malloc(len);
 	bzero(string, len+1);
 	memcpy(string, bytes, len);
-	return string;
+	tmp->len = len;
+	tmp->s = string;
+	return tmp;
 }
 
 struct bencode_node* bencode_parse(unsigned char* bytes) {
@@ -164,10 +141,12 @@ struct bencode_node* bencode_parse(unsigned char* bytes) {
 				}
 		case '0'...'9':	{
 					n = (bencode_node *)malloc(sizeof(bencode_node));
+					bencode_string *tmp;
 					memset(n, 0, sizeof(n));
 					n->type = STRING;
-					n->content.s = bencode_parse_string(bytes);
-					len = strlen(n->content.s);
+					tmp = bencode_parse_string(bytes);
+					n->content.s = tmp->s;
+					len = tmp->len;
 					n->len = len + 1 + (len == 0 ? 1 : (int)(log10(len)+1));
 					bytes += n->len;
 					return n;
