@@ -21,3 +21,5 @@
 .cproject
 .settings/
 .project
+.directory
+core.*
