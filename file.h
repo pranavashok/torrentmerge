@@ -18,4 +18,6 @@ typedef struct file_list_t{
 	struct file_list_t *next;
 }file_list_t;
 
+struct file_chunks_t* parse_file(file_list_t *ptr);
+
 #endif

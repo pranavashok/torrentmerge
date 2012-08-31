@@ -9,32 +9,26 @@ Author : Clive Verghese <me@cliveverghese.com>
 #include<string.h>
 #include "file.h"
 
-
-	
 file_chunks_t * parse_file(file_list_t *ptr)
 {
-	
 	FILE *fptr;
-	int chunk_size = 1024,i;
-	struct file_chunks_t *ret;
-	unsigned char chunk[1024],msg_digest[20];
+	int i, bytes_read, chunk_size = 1024;
+	struct file_chunks_t **scan, *new, *head = NULL;
+	unsigned char chunk[1024], msg_digest[20];
 	
-	printf("%s opened\n",ptr->file);
 	fptr = fopen(ptr->file,"r");
-	
-	fread((void *)chunk,sizeof(char),chunk_size,fptr);
-	SHA1(chunk,chunk_size,msg_digest);
-	for(i = 0; i < 20; i++)
-	{
-		printf("%02x",msg_digest[i]);
+	while(fptr && bytes_read > 0) {
+	    bytes_read = fread((void *)chunk, sizeof(char), chunk_size, fptr);
+	    SHA1(chunk, bytes_read, msg_digest);
+	    new = malloc(sizeof(file_chunks_t));
+	    memcpy(new->content, msg_digest, 20);
+	    new->next = NULL;
+	    scan = &head;
+	    while(*scan != NULL)
+		scan = &(*scan)->next;
+	    *scan = new;
 	}
-	
-	ret = malloc(sizeof(file_chunks_t));
-	memcpy(ret->content,msg_digest,20);
-	
-	
-	ret->next = NULL;
-	return ret;
+	return head;
 }
 
 int main(int argc,char *argv[])
@@ -47,10 +41,13 @@ int main(int argc,char *argv[])
 	printf("%s\n",file_list.file);
 	ptr = parse_file(&file_list);
 	printf("\n");
-	for(i = 0; i < 20; i++)
-	{
-		printf("%02x",ptr->content[i]);
-	}
+	do {
+	    for(i = 0; i < 20; i++)
+	    {
+		    printf("%02x",ptr->content[i]);
+	    }
+	    printf("\n");
+	} while (ptr = ptr->next);
 	printf("\n");
 	return 0;
 }
