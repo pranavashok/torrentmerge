@@ -8,16 +8,16 @@ Author : Clive Verghese <me@cliveverghese.com>
 
 #define FILE_H
 
-typedef struct file_chunks_t{
+typedef struct file_chunk_hash {
 	unsigned char content[20];
-	struct file_chunks_t *next;
-}file_chunks_t;
+	struct file_chunk_hash *next;
+} file_chunk_hash;
 	
-typedef struct file_list_t{
+typedef struct file_list {
 	char *file;
-	struct file_list_t *next;
-}file_list_t;
+	struct file_list *next;
+}file_list;
 
-struct file_chunks_t* parse_file(file_list_t *ptr);
+struct file_chunk_hash* get_current_hash(file_list *ptr);
 
 #endif
