@@ -158,3 +158,13 @@ struct bencode_node* bencode_parse(unsigned char* bytes) {
 	}
 }
 
+struct bencode_dict* get_dict_node_by_key(bencode_dict* d, char* key) {
+    int cmp;
+    while(d!=NULL) {
+	if(!strcmp(d->key, key))
+	    return d;
+    	else
+	    d = d->next;
+    }
+    return d;
+}

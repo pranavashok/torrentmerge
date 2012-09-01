@@ -55,28 +55,6 @@ file_chunk_hash* get_current_hash(file_list *ptr)
 	}
 	return head;
 }
-
-int main(int argc,char *argv[])
-{
-	struct file_list file_list;
-	struct file_chunk_hash *ptr;
-	int i;
-	file_list.file = calloc(1024, sizeof(char));
-	strcpy(file_list.file,argv[1]);
-	printf("%s\n",file_list.file);
-	file_list.next = NULL;
-	ptr = get_current_hash(&file_list);
-	printf("\n");
-	do {
-	    for(i = 0; i < 20; i++)
-	    {
-		    printf("%02x", ptr->content[i]);
-	    }
-	    printf("\n");
-	} while (ptr = ptr->next);
-	printf("\n");
-	return 0;
-}
 	
 	
 	

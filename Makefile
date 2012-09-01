@@ -6,6 +6,6 @@ main:
 file:
 	gcc file.c -lcrypto -lssl -o file
 debug:
-	gcc -g file.c -lcrypto -lssl -o debug
+	gcc -g parser.c main.c -lm -o debug
 clean:
 	rm -f parser file debug

@@ -44,6 +44,7 @@ long bencode_parse_len(unsigned char* bytes);
 long bencode_parse_number(unsigned char* bytes);
 struct bencode_dict* bencode_parse_dict(unsigned char* bytes);
 struct bencode_node* bencode_parse(unsigned char* bytes);
+struct bencode_dict* get_dict_node_by_key(bencode_dict* d, char* key);
 
 #endif /* PARSER_H_ */
 
