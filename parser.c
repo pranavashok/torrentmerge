@@ -96,7 +96,7 @@ bencode_string* bencode_parse_string(unsigned char* bytes) {
 	bencode_string *tmp = malloc(sizeof(bencode_string));
 	long long len = bencode_parse_number(bytes);
 	while(*(bytes++) != ':');
-	string = (unsigned char *)malloc(len);
+	string = (unsigned char *)malloc(len+1);
 	bzero(string, len+1);
 	memcpy(string, bytes, len);
 	tmp->len = len;
@@ -110,61 +110,61 @@ struct bencode_node* bencode_parse(unsigned char* bytes) {
 	long pos, i, j, len;
 
 	switch(*bytes) {
-		case 'd':	{
-					n = (bencode_node *)malloc(sizeof(bencode_node));
-					memset(n, 0, sizeof(n));
-					n->type = DICTIONARY;
-					n->content.d = bencode_parse_dict(++bytes);
-					len = n->content.d->len;
-					n->len = len+2;
-					bytes += n->len;
-					return n;
-				}
-		case 'l':	{
-					n = (bencode_node *)malloc(sizeof(bencode_node));
-					memset(n, 0, sizeof(n));
-					n->type = LIST;
-					n->content.l = bencode_parse_list(++bytes);
-					len = n->content.l->len;
-					n->len = len+2;
-					bytes += n->len;
-					return n;
-				}
-		case 'i': 	{
-					n = (bencode_node *)malloc(sizeof(bencode_node));
-					memset(n, 0, sizeof(n));
-					n->type = INTEGER;
-					n->content.i = bencode_parse_integer(++bytes);
-					n->len = 2 + (n->content.i == 0 ? 1 : (int)(log10(n->content.i)+1));
-					bytes += n->len;
-					return n;
-				}
-		case '0'...'9':	{
-					n = (bencode_node *)malloc(sizeof(bencode_node));
-					bencode_string *tmp;
-					memset(n, 0, sizeof(n));
-					n->type = STRING;
-					tmp = bencode_parse_string(bytes);
-					n->content.s = tmp->s;
-					len = tmp->len;
-					n->len = len + 1 + (len == 0 ? 1 : (int)(log10(len)+1));
-					bytes += n->len;
-					return n;
-				}
-		case 'e':		{
-					return NULL;
-				}
+	case 'd':	{
+		n = (bencode_node *)malloc(sizeof(bencode_node));
+		memset(n, 0, sizeof(n));
+		n->type = DICTIONARY;
+		n->content.d = bencode_parse_dict(++bytes);
+		len = n->content.d->len;
+		n->len = len+2;
+		bytes += n->len;
+		return n;
+	}
+	case 'l':	{
+		n = (bencode_node *)malloc(sizeof(bencode_node));
+		memset(n, 0, sizeof(n));
+		n->type = LIST;
+		n->content.l = bencode_parse_list(++bytes);
+		len = n->content.l->len;
+		n->len = len+2;
+		bytes += n->len;
+		return n;
+	}
+	case 'i': 	{
+		n = (bencode_node *)malloc(sizeof(bencode_node));
+		memset(n, 0, sizeof(n));
+		n->type = INTEGER;
+		n->content.i = bencode_parse_integer(++bytes);
+		n->len = 2 + (n->content.i == 0 ? 1 : (int)(log10(n->content.i)+1));
+		bytes += n->len;
+		return n;
+	}
+	case '0'...'9':	{
+		n = (bencode_node *)malloc(sizeof(bencode_node));
+		bencode_string *tmp;
+		memset(n, 0, sizeof(n));
+		n->type = STRING;
+		tmp = bencode_parse_string(bytes);
+		n->content.s = tmp->s;
+		len = tmp->len;
+		n->len = len + 1 + (len == 0 ? 1 : (int)(log10(len)+1));
+		bytes += n->len;
+		return n;
+	}
+	case 'e':		{
+		return NULL;
+	}
 
 	}
 }
 
 struct bencode_dict* get_dict_node_by_key(bencode_dict* d, char* key) {
-    int cmp;
-    while(d!=NULL) {
-	if(!strcmp(d->key, key))
-	    return d;
-    	else
-	    d = d->next;
-    }
-    return d;
+	int cmp;
+	while(d!=NULL) {
+		if(!strcmp(d->key, key))
+			return d;
+		else
+			d = d->next;
+	}
+	return d;
 }
