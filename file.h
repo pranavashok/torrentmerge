@@ -5,7 +5,6 @@ Author : Clive Verghese <me@cliveverghese.com>
 */
 
 #ifndef FILE_H
-
 #define FILE_H
 
 typedef struct file_chunk_hash {
@@ -19,5 +18,6 @@ typedef struct file_list {
 }file_list;
 
 struct file_chunk_hash* get_current_hash(file_list *ptr);
+struct file_list* get_file_list(bencode_node *n);
 
 #endif

@@ -1,11 +1,8 @@
 all:
-	gcc parser.c main.c -lm -o parser
-	gcc file.c -lcrypto -lssl -o file
+	gcc parser.c main.c file.c -lm -lssl -lcrypto -o main
 main:
-	gcc parser.c main.c -lm -o parser
-file:
-	gcc file.c -lcrypto -lssl -o file
+	gcc parser.c main.c file.c -lm -lssl -lcrypto -o main
 debug:
-	gcc -g parser.c main.c -lm -o debug
+	gcc -g parser.c main.c file.c -lm -lssl -lcrypto -o debug
 clean:
-	rm -f parser file debug
+	rm -f parser file main debug

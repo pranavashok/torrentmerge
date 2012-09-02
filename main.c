@@ -13,9 +13,8 @@
 
 int main(int argv, char* argc[]) {
 	char* bencode;
-	bencode_node *n, *file, *path;
-	bencode_dict *info, *files;
-	struct file_list *f_list = NULL, *f_tmp, *f_iter;
+	struct bencode_node *n;
+	struct file_list *f_list, *f_iter;
 	struct file_chunk_hash *ptr;
 	int i;
 
@@ -26,33 +25,8 @@ int main(int argv, char* argc[]) {
 	printf("\nParsing completed");
 
 	printf("\nListing files\n");
-	info = get_dict_node_by_key(n->content.d, "info");
 
-	files = get_dict_node_by_key(info->value->content.d, "files");
-
-	file = files->value->content.l;
-	while(file) {
-		path = file->content.d->value->content.l;
-		char *filepath = "";
-		while(path!=NULL) {
-			asprintf(&filepath, "/%s%s", path->content.s, filepath);
-			path = path->next;
-		}
-
-		f_tmp = malloc(sizeof(file_list));
-		f_tmp->file = calloc(strlen(filepath), sizeof(char));
-		memcpy(f_tmp->file, filepath, strlen(filepath));
-		f_tmp->next = NULL;
-
-		if(f_list == NULL) {
-			f_list = f_tmp;
-		}
-		else {
-			f_tmp->next = f_list;
-			f_list = f_tmp;
-		}
-		file=file->next;
-	}
+	f_list = get_file_list(n);
 	f_iter = f_list;
 	while(f_iter) {
 		printf("%s\n", f_iter->file);
